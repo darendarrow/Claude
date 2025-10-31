@@ -1,8 +1,6 @@
 # Docker Compose configuration for Telegram Media Downloader
 # This orchestrates the container deployment with proper volume management and networking
 
-version: '3.8'
-
 services:
   telegram-downloader:
     # Service name - used for container naming and networking
@@ -40,9 +38,6 @@ services:
     volumes:
       # Session file - stores authentication, must persist
       - ./data:/app/data
-      
-      # Database file - tracks downloaded messages
-      - ./media_tracker.db:/app/media_tracker.db
       
       # Downloaded media files - the main output directory
       - ./downloads:/app/downloads

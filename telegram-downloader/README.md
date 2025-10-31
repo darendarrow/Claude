@@ -10,6 +10,7 @@ A production-ready Python application that automatically downloads images and vi
 ✅ **Duplicate Prevention** - SQLite database tracks downloads to avoid duplicates  
 ✅ **Docker Ready** - Fully containerized with Docker Compose for easy deployment  
 ✅ **Production Ready** - Robust error handling, logging, and automatic retry logic  
+✅ **Bug Fixed** - All photo size attribute errors and permission issues resolved  
 
 ## Quick Start
 
@@ -21,36 +22,45 @@ A production-ready Python application that automatically downloads images and vi
 
 ### Installation
 
-1. Clone or download this project
-2. Copy `.env.example` to `.env` and fill in your credentials:
+1. Create project directory and extract files:
    ```bash
-   cp .env.example .env
-   # Edit .env with your TELEGRAM_API_ID and TELEGRAM_API_HASH
+   mkdir telegram-downloader
+   cd telegram-downloader
+   # Copy all files from this artifact
    ```
 
-3. Build the Docker image:
+2. Set up environment:
+   ```bash
+   cp .env.example .env
+   nano .env  # Add your TELEGRAM_API_ID and TELEGRAM_API_HASH
+   ```
+
+3. Create required directories with proper permissions:
+   ```bash
+   mkdir -p data downloads
+   chmod 777 data downloads
+   ```
+
+4. Build the Docker image:
    ```bash
    docker compose build
    ```
 
-4. First-time authentication (interactive):
+5. First-time authentication:
    ```bash
    docker compose run --rm telegram-downloader
+   # Enter phone number, verification code, and 2FA password if enabled
    ```
-   - Enter your phone number
-   - Enter the verification code
-   - Enter 2FA password if enabled
 
-5. Run in background:
+6. Run in background:
    ```bash
    docker compose up -d
    ```
 
-6. View logs:
+7. Monitor logs:
    ```bash
    docker compose logs -f
    ```
 
 ## File Organization
 
-Downloaded files are organized as:

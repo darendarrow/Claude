@@ -90,7 +90,8 @@ class MediaDownloader:
         self.downloaded_messages: Set[int] = set()
         
         # Initialize database for tracking downloads
-        self.db_path = 'media_tracker.db'
+        # Store in data directory which is mounted as a volume
+        self.db_path = 'data/media_tracker.db'
         self._init_database()
         
         # Load previously downloaded message IDs
@@ -101,6 +102,9 @@ class MediaDownloader:
         
     def _init_database(self):
         """Initialize SQLite database for tracking downloads."""
+        # Ensure data directory exists
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -288,7 +292,15 @@ class MediaDownloader:
         if message.photo and config.DOWNLOAD_PHOTOS:
             media_type = "photo"
             extension = ".jpg"
-            file_size = message.photo.sizes[-1].size if hasattr(message.photo, 'sizes') else 0
+            # Handle different photo size types safely
+            try:
+                if hasattr(message.photo, 'sizes') and message.photo.sizes:
+                    last_size = message.photo.sizes[-1]
+                    file_size = getattr(last_size, 'size', 0)
+                else:
+                    file_size = 0
+            except (AttributeError, IndexError):
+                file_size = 0
             
         elif message.video and config.DOWNLOAD_VIDEOS:
             media_type = "video"

@@ -3,7 +3,7 @@
 # using a multi-stage build for optimal image size
 
 # Build stage - compiles optional C extensions
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # Install build dependencies needed for compiling cryptg and other packages
 # gcc, g++, and make are needed for C/C++ compilation
