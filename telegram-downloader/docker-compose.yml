@@ -82,10 +82,3 @@ networks:
   telegram-network:
     driver: bridge
     # Use custom network for better isolation and DNS resolution
-
-# Volume definitions (optional - Docker will create these automatically)
-volumes:
-  downloads:
-    driver: local
-  data:
-    driver: local

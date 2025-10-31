@@ -41,8 +41,10 @@ RUN useradd --create-home --shell /bin/bash telegramuser
 
 # Install runtime dependencies only (no build tools needed)
 # libssl is needed at runtime for cryptographic operations
+# procps is needed for the healthcheck (pgrep command)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl3 \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the virtual environment from the builder stage

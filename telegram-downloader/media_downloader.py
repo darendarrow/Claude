@@ -77,72 +77,79 @@ class MediaDownloader:
     
     def __init__(self):
         """Initialize the MediaDownloader with configuration settings."""
+        # Define data directory path for session and database persistence
+        self.data_dir = Path('data')
+        self.data_dir.mkdir(exist_ok=True)
+
+        # Store session file in data directory for persistence
+        session_path = str(self.data_dir / config.SESSION_NAME)
         self.client = TelegramClient(
-            config.SESSION_NAME,
+            session_path,
             config.API_ID,
             config.API_HASH
         )
-        
+
         # Set flood wait threshold for automatic sleep
         self.client.flood_sleep_threshold = config.FLOOD_SLEEP_THRESHOLD
-        
+
         # Track downloaded messages to avoid duplicates
         self.downloaded_messages: Set[int] = set()
-        
+
+        # Asyncio locks for thread-safe access to shared resources
+        self.db_lock = asyncio.Lock()
+        self.messages_lock = asyncio.Lock()
+
         # Initialize database for tracking downloads
         # Store in data directory which is mounted as a volume
-        self.db_path = 'data/media_tracker.db'
+        self.db_path = str(self.data_dir / 'media_tracker.db')
         self._init_database()
-        
+
         # Load previously downloaded message IDs
         self._load_downloaded_messages()
-        
+
         # Flag for graceful shutdown
         self.running = True
         
     def _init_database(self):
         """Initialize SQLite database for tracking downloads."""
-        # Ensure data directory exists
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS downloads (
-                message_id INTEGER PRIMARY KEY,
-                chat_id INTEGER,
-                chat_name TEXT,
-                sender_username TEXT,
-                file_path TEXT,
-                download_date TIMESTAMP,
-                file_size INTEGER,
-                media_type TEXT
-            )
-        ''')
-        
-        # Index for faster lookups
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_message_id 
-            ON downloads(message_id)
-        ''')
-        
-        conn.commit()
-        conn.close()
+        # Use context manager for proper resource cleanup and set timeout
+        with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS downloads (
+                    message_id INTEGER PRIMARY KEY,
+                    chat_id INTEGER,
+                    chat_name TEXT,
+                    sender_username TEXT,
+                    file_path TEXT,
+                    download_date TIMESTAMP,
+                    file_size INTEGER,
+                    media_type TEXT
+                )
+            ''')
+
+            # Index for faster lookups
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_message_id
+                ON downloads(message_id)
+            ''')
+
+            conn.commit()
         logger.info("Database initialized successfully")
     
     def _load_downloaded_messages(self):
         """Load previously downloaded message IDs from database."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('SELECT message_id FROM downloads')
-        self.downloaded_messages = {row[0] for row in cursor.fetchall()}
-        
-        conn.close()
+        # Use context manager for proper resource cleanup
+        with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute('SELECT message_id FROM downloads')
+            self.downloaded_messages = {row[0] for row in cursor.fetchall()}
+
         logger.info(f"Loaded {len(self.downloaded_messages)} previously downloaded messages")
     
-    def _track_download(
+    async def _track_download(
         self,
         message_id: int,
         chat_id: int,
@@ -154,7 +161,7 @@ class MediaDownloader:
     ):
         """
         Track a downloaded file in the database.
-        
+
         Args:
             message_id: Telegram message ID
             chat_id: Chat/channel ID
@@ -164,32 +171,34 @@ class MediaDownloader:
             file_size: Size of the file in bytes
             media_type: Type of media (photo/video/document)
         """
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        try:
-            cursor.execute('''
-                INSERT OR IGNORE INTO downloads 
-                (message_id, chat_id, chat_name, sender_username, 
-                 file_path, download_date, file_size, media_type)
-                VALUES (?, ?, ?, ?, ?, datetime('now'), ?, ?)
-            ''', (
-                message_id,
-                chat_id,
-                chat_name,
-                sender_username,
-                file_path,
-                file_size,
-                media_type
-            ))
-            
-            conn.commit()
-            self.downloaded_messages.add(message_id)
-            
-        except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
-        finally:
-            conn.close()
+        # Use locks to prevent concurrent database access and set modification
+        async with self.db_lock:
+            try:
+                with sqlite3.connect(self.db_path, timeout=30.0) as conn:
+                    cursor = conn.cursor()
+
+                    cursor.execute('''
+                        INSERT OR IGNORE INTO downloads
+                        (message_id, chat_id, chat_name, sender_username,
+                         file_path, download_date, file_size, media_type)
+                        VALUES (?, ?, ?, ?, ?, datetime('now'), ?, ?)
+                    ''', (
+                        message_id,
+                        chat_id,
+                        chat_name,
+                        sender_username,
+                        file_path,
+                        file_size,
+                        media_type
+                    ))
+
+                    conn.commit()
+
+                # Note: message_id is already in downloaded_messages set
+                # (added early in _download_media to prevent race conditions)
+
+            except sqlite3.Error as e:
+                logger.error(f"Database error: {e}")
     
     @staticmethod
     def _sanitize_filename(filename: str) -> str:
@@ -279,10 +288,13 @@ class MediaDownloader:
         Returns:
             Path to downloaded file, or None if download failed
         """
-        # Check if already downloaded
-        if message.id in self.downloaded_messages:
-            logger.debug(f"Message {message.id} already downloaded, skipping")
-            return None
+        # Check if already downloaded (with lock for thread-safety)
+        async with self.messages_lock:
+            if message.id in self.downloaded_messages:
+                logger.debug(f"Message {message.id} already downloaded, skipping")
+                return None
+            # Add to set early to prevent concurrent downloads of same message
+            self.downloaded_messages.add(message.id)
         
         # Determine media type and extension
         media_type = None
@@ -333,61 +345,90 @@ class MediaDownloader:
         # Create filename with timestamp, sender, and message ID
         timestamp = message.date.strftime('%Y%m%d_%H%M%S')
         sanitized_sender = self._sanitize_filename(sender_username)
-        filename = f"{timestamp}_{sanitized_sender}_msg{message.id}{extension}"
-        filepath = chat_dir / filename
-        
-        # Handle duplicate filenames
-        counter = 1
-        while filepath.exists():
-            filename = f"{timestamp}_{sanitized_sender}_msg{message.id}_{counter}{extension}"
+
+        # Find unique filename (atomic check to prevent TOCTOU race)
+        counter = 0
+        while True:
+            if counter == 0:
+                filename = f"{timestamp}_{sanitized_sender}_msg{message.id}{extension}"
+            else:
+                filename = f"{timestamp}_{sanitized_sender}_msg{message.id}_{counter}{extension}"
+
             filepath = chat_dir / filename
-            counter += 1
+
+            # Try to create file atomically - prevents race condition
+            try:
+                # Open with exclusive creation flag (fails if file exists)
+                fd = os.open(str(filepath), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                os.close(fd)
+                break  # Successfully created, exit loop
+            except FileExistsError:
+                counter += 1
+                if counter > 1000:  # Safety limit
+                    raise RuntimeError(f"Could not find unique filename after {counter} attempts")
         
         # Download with retry logic
         max_retries = 3
         retry_count = 0
-        
-        while retry_count < max_retries:
+
+        try:
+            while retry_count < max_retries:
+                try:
+                    logger.info(
+                        f"Downloading {media_type} from {chat_name} "
+                        f"by {sender_username} ({file_size / 1024 / 1024:.2f}MB)"
+                    )
+
+                    # Download the media
+                    await message.download_media(file=str(filepath))
+
+                    # Track the download in database
+                    await self._track_download(
+                        message_id=message.id,
+                        chat_id=message.chat_id,
+                        chat_name=chat_name,
+                        sender_username=sender_username,
+                        file_path=str(filepath),
+                        file_size=file_size,
+                        media_type=media_type
+                    )
+
+                    logger.info(f"Successfully downloaded to: {filepath}")
+                    return str(filepath)
+
+                except FloodWaitError as e:
+                    logger.warning(f"Flood wait: must wait {e.seconds} seconds")
+                    await asyncio.sleep(e.seconds)
+                    retry_count += 1
+
+                except Exception as e:
+                    logger.error(f"Error downloading media from message {message.id}: {e}")
+                    retry_count += 1
+
+                    if retry_count < max_retries:
+                        wait_time = 2 ** retry_count  # Exponential backoff
+                        logger.info(f"Retrying in {wait_time} seconds...")
+                        await asyncio.sleep(wait_time)
+                    else:
+                        logger.error(f"Failed to download after {max_retries} attempts")
+
+            # If we get here, all retries failed
+            return None
+
+        except Exception as e:
+            # Download failed, cleanup: remove from set and delete placeholder file
+            logger.error(f"Download failed with exception: {e}")
+            async with self.messages_lock:
+                self.downloaded_messages.discard(message.id)
+
+            # Remove the empty placeholder file
             try:
-                logger.info(
-                    f"Downloading {media_type} from {chat_name} "
-                    f"by {sender_username} ({file_size / 1024 / 1024:.2f}MB)"
-                )
-                
-                # Download the media
-                await message.download_media(file=str(filepath))
-                
-                # Track the download
-                self._track_download(
-                    message_id=message.id,
-                    chat_id=message.chat_id,
-                    chat_name=chat_name,
-                    sender_username=sender_username,
-                    file_path=str(filepath),
-                    file_size=file_size,
-                    media_type=media_type
-                )
-                
-                logger.info(f"Successfully downloaded to: {filepath}")
-                return str(filepath)
-                
-            except FloodWaitError as e:
-                logger.warning(f"Flood wait: must wait {e.seconds} seconds")
-                await asyncio.sleep(e.seconds)
-                retry_count += 1
-                
-            except Exception as e:
-                logger.error(f"Error downloading media from message {message.id}: {e}")
-                retry_count += 1
-                
-                if retry_count < max_retries:
-                    wait_time = 2 ** retry_count  # Exponential backoff
-                    logger.info(f"Retrying in {wait_time} seconds...")
-                    await asyncio.sleep(wait_time)
-                else:
-                    logger.error(f"Failed to download after {max_retries} attempts")
-        
-        return None
+                if filepath.exists():
+                    filepath.unlink()
+            except Exception as cleanup_error:
+                logger.warning(f"Could not cleanup file {filepath}: {cleanup_error}")
+
+            return None
     
     async def _process_message(self, message):
         """
@@ -560,14 +601,47 @@ class MediaDownloader:
             logger.error(f"Authentication error: {e}")
             raise
     
-    def setup_signal_handlers(self):
-        """Setup signal handlers for graceful shutdown."""
-        def signal_handler(sig, frame):
+    def setup_signal_handlers(self, loop):
+        """
+        Setup asyncio-compatible signal handlers for graceful shutdown.
+
+        Args:
+            loop: The asyncio event loop
+        """
+        def signal_handler():
             logger.info("Shutdown signal received - stopping gracefully...")
             self.running = False
-        
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+
+            # Disconnect the Telegram client to stop run_until_disconnected()
+            # This must be scheduled as a task since disconnect() is async
+            asyncio.create_task(self._shutdown())
+
+        # Use asyncio's signal handler instead of signal.signal()
+        # This is safer for asyncio applications
+        try:
+            loop.add_signal_handler(signal.SIGINT, signal_handler)
+            loop.add_signal_handler(signal.SIGTERM, signal_handler)
+        except NotImplementedError:
+            # Fallback for Windows which doesn't support add_signal_handler
+            import sys
+            if sys.platform == 'win32':
+                signal.signal(signal.SIGINT, lambda sig, frame: signal_handler())
+                signal.signal(signal.SIGTERM, lambda sig, frame: signal_handler())
+            else:
+                raise
+
+    async def _shutdown(self):
+        """
+        Gracefully shutdown the application.
+        Disconnects the Telegram client and performs cleanup.
+        """
+        try:
+            logger.info("Disconnecting from Telegram...")
+            if self.client.is_connected():
+                await self.client.disconnect()
+            logger.info("Shutdown complete")
+        except Exception as e:
+            logger.error(f"Error during shutdown: {e}")
     
     async def run(self):
         """
@@ -576,7 +650,8 @@ class MediaDownloader:
         """
         try:
             # Setup signal handlers for graceful shutdown
-            self.setup_signal_handlers()
+            loop = asyncio.get_running_loop()
+            self.setup_signal_handlers(loop)
             
             # Authenticate user
             await self.authenticate()
@@ -604,10 +679,11 @@ class MediaDownloader:
         except Exception as e:
             logger.error(f"Unexpected error: {e}", exc_info=True)
         finally:
-            # Cleanup
-            logger.info("Disconnecting...")
-            await self.client.disconnect()
-            logger.info("Shutdown complete")
+            # Cleanup - only disconnect if still connected (shutdown might have already done it)
+            if self.client.is_connected():
+                logger.info("Performing final cleanup...")
+                await self.client.disconnect()
+                logger.info("Shutdown complete")
 
 
 async def main():
