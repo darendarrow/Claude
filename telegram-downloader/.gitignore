@@ -1,0 +1,67 @@
+# Environment and secrets - NEVER commit these!
+.env
+*.session
+*.session-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+ENV/
+env/
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Downloads directory (usually too large to commit)
+downloads/
+
+# Session data directory
+data/
+*.session
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Docker
+docker-compose.override.yml
+
+# Backups
+*.bak
+backup/

@@ -1,0 +1,39 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data and downloads (these mount as volumes)
+downloads/
+data/
+*.db
+*.session
+
+# Git and Docker
+.git/
+.gitignore
+.dockerignore
+docker-compose.yml
+
+# Logs
+*.log
+
+# Environment file (should be provided at runtime)
+.env
+
+# OS files
+.DS_Store
+Thumbs.db

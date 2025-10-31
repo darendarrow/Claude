@@ -1,0 +1,96 @@
+# Docker Compose configuration for Telegram Media Downloader
+# This orchestrates the container deployment with proper volume management and networking
+
+version: '3.8'
+
+services:
+  telegram-downloader:
+    # Service name - used for container naming and networking
+    container_name: telegram-media-downloader
+    
+    # Build configuration - tells Docker how to create the image
+    build:
+      context: .  # Build from current directory
+      dockerfile: Dockerfile
+    
+    # Alternatively, use a pre-built image (uncomment if you push to a registry)
+    # image: your-registry/telegram-downloader:latest
+    
+    # Restart policy - automatically restart if the container stops
+    # 'unless-stopped' means it will restart on failures but not if manually stopped
+    restart: unless-stopped
+    
+    # Environment variables loaded from .env file
+    # This keeps sensitive credentials out of the compose file
+    env_file:
+      - .env
+    
+    # Additional environment variables can be set here
+    # These override values from .env if both are present
+    environment:
+      # Python settings for better logging in containers
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      # Telegram downloader settings
+      - SESSION_NAME=media_downloader
+      - DOWNLOAD_PATH=/app/downloads
+    
+    # Volume mounts - persist data outside the container
+    # This ensures data survives container restarts and updates
+    volumes:
+      # Session file - stores authentication, must persist
+      - ./data:/app/data
+      
+      # Database file - tracks downloaded messages
+      - ./media_tracker.db:/app/media_tracker.db
+      
+      # Downloaded media files - the main output directory
+      - ./downloads:/app/downloads
+      
+      # Configuration files - allows editing without rebuilding
+      - ./config.py:/app/config.py:ro
+      - ./.env:/app/.env:ro
+    
+    # Network configuration
+    # Using bridge network (default) is fine for this application
+    networks:
+      - telegram-network
+    
+    # Logging configuration - prevents logs from consuming too much disk space
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"      # Maximum size of each log file
+        max-file: "3"        # Keep last 3 log files
+        compress: "true"     # Compress rotated logs
+    
+    # Resource limits - prevents container from consuming too much host resources
+    # Adjust these based on your server capacity
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'        # Maximum 2 CPU cores
+          memory: 2G         # Maximum 2GB RAM
+        reservations:
+          cpus: '0.5'        # Guaranteed 0.5 CPU cores
+          memory: 512M       # Guaranteed 512MB RAM
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true  # Prevent privilege escalation
+    
+    # Read-only root filesystem (commented out as the app needs to write to /app)
+    # read_only: true
+
+# Network definition
+networks:
+  telegram-network:
+    driver: bridge
+    # Use custom network for better isolation and DNS resolution
+
+# Volume definitions (optional - Docker will create these automatically)
+volumes:
+  downloads:
+    driver: local
+  data:
+    driver: local

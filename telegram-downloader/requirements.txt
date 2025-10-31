@@ -1,0 +1,67 @@
+# Core dependencies for Telegram Media Downloader
+# These are the essential packages required for the application to function
+
+# Telethon - Official Telegram client library for Python
+# Provides full MTProto API implementation for user accounts
+telethon>=1.41.0
+
+# Python-dotenv - Load environment variables from .env files
+# Makes configuration management clean and secure
+python-dotenv>=1.0.0
+
+# Optional but highly recommended performance packages
+# These significantly improve download speeds and encryption performance
+
+# Cryptg - C-based cryptographic library for Telethon
+# Provides 10-100x faster encryption/decryption operations
+# This is especially important for large files and high-volume downloads
+cryptg>=0.4.0
+
+# Additional optional dependencies for enhanced functionality
+
+# Pillow - Python Imaging Library
+# Used for image processing, thumbnail generation, and validation
+# Useful if you want to add features like image resizing or format conversion
+Pillow>=10.0.0
+
+# aiofiles - Async file operations
+# Improves performance for file I/O operations in async contexts
+aiofiles>=23.0.0
+
+# tqdm - Progress bar library
+# Useful for showing download progress in the console
+tqdm>=4.66.0
+
+# hachoir - Metadata extraction for multimedia files
+# Can extract detailed metadata from videos and images
+hachoir>=3.2.0
+
+# python-magic - File type identification
+# More accurate MIME type detection than basic methods
+python-magic>=0.4.27
+
+# psutil - System and process utilities
+# Useful for monitoring resource usage and system information
+psutil>=5.9.0
+
+# Additional security and encryption packages
+
+# PyNaCl - Python binding to libsodium
+# Provides additional encryption primitives
+PyNaCl>=1.5.0
+
+# Development and debugging tools (optional)
+
+# colorlog - Colored terminal output for logs
+# Makes logs easier to read during development
+colorlog>=6.7.0
+
+# ipython - Enhanced Python shell
+# Better interactive debugging experience
+ipython>=8.18.0
+
+# Database optimization (optional)
+
+# sqlite-utils - SQLite helper utilities
+# Useful for database maintenance and queries
+sqlite-utils>=3.35
