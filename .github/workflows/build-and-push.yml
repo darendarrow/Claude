@@ -32,7 +32,6 @@ jobs:
       run: |
         REPO_OWNER=$(echo "$" | tr '[:upper:]' '[:lower:]')
         REPO_NAME=$(echo "$" | tr '[:upper:]' '[:lower:]')
-#        IMAGE_TAG=$([[ "$" == "push" && "$" =~ ^refs/tags/ ]] && echo "$" || echo "$")
         IMAGE_TAG2=telegram-downloader
         docker build . --file telegram-downloader/Dockerfile --tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG2}
         docker tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG} ghcr.io/$REPO_OWNER/$REPO_NAME:latest
