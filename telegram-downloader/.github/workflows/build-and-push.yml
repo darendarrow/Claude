@@ -33,14 +33,14 @@ jobs:
         REPO_OWNER=darendarrow
         REPO_NAME=claude
         IMAGE_TAG=telegram-downloader
-        docker build . --file telegram-downloader/Dockerfile --tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}
+        docker build . --file Dockerfile --tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}
         docker tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG} ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}-latest
 
     # Push the Docker image to GitHub Container Registry
     - name: Push Docker image
       run: |
-        REPO_OWNER=$(echo "$" | tr '[:upper:]' '[:lower:]')
-        REPO_NAME=$(echo "$" | tr '[:upper:]' '[:lower:]')
-        IMAGE_TAG=$([[ "$" == "push" && "$" =~ ^refs/tags/ ]] && echo "$" || echo "$")
+        REPO_OWNER=darendarrow
+        REPO_NAME=claude
+        IMAGE_TAG=telegram-downloader
         docker push ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}
         docker push ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}-latest
