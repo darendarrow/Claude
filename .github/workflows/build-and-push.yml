@@ -27,10 +27,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    # Log in to GitHub Docker Registry
-    - name: Log in to GitHub Docker Registry
-      run: echo "$" | docker login ghcr.io -u $ --password-stdin
-
     # Build the Docker image
     - name: Build Docker image
       run: |
