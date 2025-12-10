@@ -30,11 +30,11 @@ jobs:
     # Build the Docker image
     - name: Build Docker image
       run: |
-        REPO_OWNER=$(echo "$" | tr '[:upper:]' '[:lower:]')
-        REPO_NAME=$(echo "$" | tr '[:upper:]' '[:lower:]')
-        IMAGE_TAG2=telegram-downloader
-        docker build . --file telegram-downloader/Dockerfile --tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG2}
-        docker tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG} ghcr.io/$REPO_OWNER/$REPO_NAME:latest
+        REPO_OWNER=darendarrow
+        REPO_NAME=claude
+        IMAGE_TAG=telegram-downloader
+        docker build . --file telegram-downloader/Dockerfile --tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}
+        docker tag ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG} ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}-latest
 
     # Push the Docker image to GitHub Container Registry
     - name: Push Docker image
@@ -43,4 +43,4 @@ jobs:
         REPO_NAME=$(echo "$" | tr '[:upper:]' '[:lower:]')
         IMAGE_TAG=$([[ "$" == "push" && "$" =~ ^refs/tags/ ]] && echo "$" || echo "$")
         docker push ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}
-        docker push ghcr.io/$REPO_OWNER/$REPO_NAME:latest
+        docker push ghcr.io/$REPO_OWNER/$REPO_NAME:${IMAGE_TAG}-latest
