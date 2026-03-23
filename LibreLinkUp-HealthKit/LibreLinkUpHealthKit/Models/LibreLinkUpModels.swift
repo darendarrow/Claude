@@ -15,7 +15,7 @@ struct LoginResponse: Decodable {
 
     struct AuthData: Decodable {
         let authTicket: AuthTicket
-        let user: User
+        let userId: String?
 
         struct AuthTicket: Decodable {
             let token: String
@@ -25,9 +25,30 @@ struct LoginResponse: Decodable {
 
         struct User: Decodable {
             let id: String
-            let firstName: String
-            let lastName: String
         }
+
+        enum CodingKeys: String, CodingKey {
+            case authTicket, user
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            authTicket = try container.decode(AuthTicket.self, forKey: .authTicket)
+            userId = try container.decodeIfPresent(User.self, forKey: .user)?.id
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case status, data, redirect, region
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decode(Int.self, forKey: .status)
+        redirect = try container.decodeIfPresent(Bool.self, forKey: .redirect)
+        region = try container.decodeIfPresent(String.self, forKey: .region)
+        // data can be null, missing, or an object that may lack authTicket
+        data = try? container.decodeIfPresent(AuthData.self, forKey: .data)
     }
 }
 

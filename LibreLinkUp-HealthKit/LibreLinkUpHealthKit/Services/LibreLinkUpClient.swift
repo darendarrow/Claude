@@ -1,7 +1,9 @@
+import CryptoKit
 import Foundation
 
 final class LibreLinkUpClient {
     private var token: String?
+    private var accountId: String?
     private var baseURL: URL
 
     private static let regionURLs: [String: String] = [
@@ -20,8 +22,10 @@ final class LibreLinkUpClient {
     private static let defaultHeaders: [String: String] = [
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "product": "llu.ios",
-        "version": "4.12.0",
+        "cache-control": "no-cache",
+        "connection": "Keep-Alive",
+        "product": "llu.android",
+        "version": "4.16.0",
     ]
 
     init(region: String = "us") {
@@ -48,7 +52,6 @@ final class LibreLinkUpClient {
             if let newURL = Self.regionURLs[region] {
                 self.baseURL = URL(string: newURL)!
             }
-            // Re-authenticate against correct region
             try await login(email: email, password: password)
             return
         }
@@ -58,6 +61,12 @@ final class LibreLinkUpClient {
         }
 
         self.token = authData.authTicket.token
+
+        // Compute account-id header: SHA-256 hash of the user ID
+        if let userId = authData.userId {
+            let hash = SHA256.hash(data: Data(userId.utf8))
+            self.accountId = hash.map { String(format: "%02x", $0) }.joined()
+        }
     }
 
     // MARK: - Connections
@@ -95,6 +104,9 @@ final class LibreLinkUpClient {
         request.httpMethod = "GET"
         Self.defaultHeaders.forEach { request.setValue($1, forHTTPHeaderField: $0) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if let accountId {
+            request.setValue(accountId, forHTTPHeaderField: "account-id")
+        }
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
