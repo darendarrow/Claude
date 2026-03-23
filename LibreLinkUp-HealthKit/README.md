@@ -8,22 +8,22 @@ If you use a FreeStyle Libre CGM and share your glucose data through LibreLinkUp
 
 ## Requirements
 
-- macOS 14.0 or later (Apple Silicon recommended for HealthKit support)
+- macOS 14.0 or later (Apple Silicon required for HealthKit support)
 - Xcode 15 or later
+- An Apple Developer account (free personal team is sufficient) for code signing
 - A LibreLinkUp account with at least one active connection (someone sharing their Libre data with you, or your own data shared to yourself)
-- HealthKit availability on the target Mac
 
 ## Quick Start
 
 1. Clone the repository
 2. Open `LibreLinkUpHealthKit.xcodeproj` in Xcode
-3. Select a development team in **Signing & Capabilities** (required for Keychain and HealthKit access)
+3. Select the **LibreLinkUpHealthKit** target, go to **Signing & Capabilities**, enable **Automatically manage signing**, and select your development team
 4. Build and run (Cmd+R)
 5. Grant HealthKit permissions when prompted
 6. Open **Settings** (gear icon), enter your LibreLinkUp credentials, select your region, and tap **Log In**
 7. Press **Sync Now** to fetch readings and write them to HealthKit
 
-Credentials are saved to the macOS Keychain on successful login, so you won't need to re-enter them on subsequent launches.
+Credentials are saved to the macOS Keychain on successful login, so you won't need to re-enter them on subsequent launches. The app will automatically log in from saved credentials when relaunched.
 
 See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
 
@@ -42,7 +42,8 @@ LibreLinkUpHealthKit/
   App.swift                       # App entry point
   ContentView.swift               # Main screen (status, current reading, sync)
   Info.plist                      # HealthKit usage descriptions
-  LibreLinkUpHealthKit.entitlements
+  LibreLinkUpHealthKit.entitlements  # HealthKit entitlement
+  Assets.xcassets/                # Asset catalog (app icon)
   Models/
     GlucoseReading.swift          # Local glucose reading model
     LibreLinkUpModels.swift       # API response Codable types
@@ -72,6 +73,8 @@ xcodebuild -project LibreLinkUpHealthKit.xcodeproj \
            -configuration Debug \
            build
 ```
+
+**Note:** A valid development team must be configured in the project for code signing. The HealthKit entitlement requires a provisioning profile, which Xcode manages automatically when a team is selected. Set `DEVELOPMENT_TEAM` in `project.yml` or configure it in Xcode's Signing & Capabilities editor.
 
 ## License
 

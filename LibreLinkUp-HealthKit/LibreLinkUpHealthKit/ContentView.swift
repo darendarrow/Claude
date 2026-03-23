@@ -10,6 +10,18 @@ struct ContentView: View {
                 statusCard
                 lastReadingCard
                 syncButton
+
+                if let result = syncService.syncResultMessage {
+                    Text(result)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let error = syncService.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+
                 Spacer()
                 NavigationLink(destination: GlucoseListView()) {
                     Label("Reading History", systemImage: "list.bullet")
