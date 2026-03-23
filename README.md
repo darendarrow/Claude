@@ -10,6 +10,6 @@ These projects are random personal projects and should not be used in production
 - [Telegram-downloader](telegram-downloader): functional Docker container to monitor and download media files from subscribed Telegram channels
 - [Telegram-extractor](telegram-extractor): Scripts to extract media files from a download bundle (this was created prior to the other telegram-downloader project)
 - [Reddit-downloader](reddit-downloader): Similar to Telegram-downloader, but downloads from a subreddit.
-- [LibreLinkUp-HealthKit](LibreLinkUp-HealthKit): This uses an unpublished Abbott LibreLinkUp API to pull CGM data from Freestyle Libre CGM sensors and republish the data to Apple HealthKit as Abbott currently does not provide this integration natively. 
+- [CGMPush](CGMPush): This uses an unpublished Abbott LibreLinkUp API to pull CGM data from Freestyle Libre CGM sensors and republish the data to Apple HealthKit as Abbott currently does not provide this integration natively. 
 
 
