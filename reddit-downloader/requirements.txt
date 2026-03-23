@@ -1,0 +1,11 @@
+# Reddit Media Downloader - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Reddit API wrapper
+praw>=7.7.0
+
+# HTTP requests for direct media downloads
+requests>=2.31.0
+
+# Environment variable management
+python-dotenv>=1.0.0

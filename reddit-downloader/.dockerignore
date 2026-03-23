@@ -1,0 +1,9 @@
+.env
+.git
+.gitignore
+downloads/
+data/
+__pycache__/
+*.pyc
+*.md
+LICENSE

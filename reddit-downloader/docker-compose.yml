@@ -1,0 +1,22 @@
+# Reddit Media Downloader — Docker Compose
+# Usage:
+#   docker compose build
+#   docker compose up -d          (run in background)
+#   docker compose logs -f        (follow logs)
+#   docker compose down           (stop)
+
+services:
+  reddit-downloader:
+    build: .
+    container_name: reddit-media-downloader
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persist downloaded media on the host
+      - ./downloads:/app/downloads
+      # Persist the SQLite database and logs
+      - ./data:/app/data
+    environment:
+      - DOWNLOAD_PATH=/app/downloads
+      - DATA_PATH=/app/data
