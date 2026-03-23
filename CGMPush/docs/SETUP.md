@@ -26,23 +26,23 @@ A development team is required for code signing. The HealthKit entitlement neces
 ### 1. Open the Project
 
 ```bash
-open LibreLinkUpHealthKit.xcodeproj
+open "CGM Push.xcodeproj"
 ```
 
 ### 2. Set Your Development Team
 
-1. Select the **LibreLinkUpHealthKit** target
+1. Select the **CGMPush** target
 2. Go to **Signing & Capabilities**
 3. Check **Automatically manage signing**
 4. Choose your Apple Developer team from the **Team** dropdown
 
-This is required for Keychain access and the HealthKit entitlement. Without a team, the build will fail with: *"LibreLinkUpHealthKit" requires a provisioning profile.*
+This is required for Keychain access and the HealthKit entitlement. Without a team, the build will fail with: *"CGMPush" requires a provisioning profile.*
 
 ### 3. Verify HealthKit Capability
 
-The project already includes the HealthKit entitlement in `LibreLinkUpHealthKit.entitlements`. If it is missing for any reason:
+The project already includes the HealthKit entitlement in `CGMPush.entitlements`. If it is missing for any reason:
 
-1. Select the **LibreLinkUpHealthKit** target
+1. Select the **CGMPush** target
 2. Go to **Signing & Capabilities**
 3. Click **+ Capability**
 4. Add **HealthKit**

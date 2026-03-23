@@ -16,8 +16,8 @@ If you use a FreeStyle Libre CGM and share your glucose data through LibreLinkUp
 ## Quick Start
 
 1. Clone the repository
-2. Open `LibreLinkUpHealthKit.xcodeproj` in Xcode
-3. Select the **LibreLinkUpHealthKit** target, go to **Signing & Capabilities**, enable **Automatically manage signing**, and select your development team
+2. Open `CGM Push.xcodeproj` in Xcode
+3. Select the **CGMPush** target, go to **Signing & Capabilities**, enable **Automatically manage signing**, and select your development team
 4. Build and run (Cmd+R)
 5. Grant HealthKit permissions when prompted
 6. Open **Settings** (gear icon), enter your LibreLinkUp credentials, select your region, and tap **Log In**
@@ -38,11 +38,11 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
 ## Project Structure
 
 ```
-LibreLinkUpHealthKit/
+CGMPush/
   App.swift                       # App entry point
   ContentView.swift               # Main screen (status, current reading, sync)
   Info.plist                      # HealthKit usage descriptions
-  LibreLinkUpHealthKit.entitlements  # HealthKit entitlement
+  CGMPush.entitlements            # HealthKit entitlement
   Assets.xcassets/                # Asset catalog (app icon)
   Models/
     GlucoseReading.swift          # Local glucose reading model
@@ -68,8 +68,8 @@ xcodegen generate
 To build from the command line:
 
 ```bash
-xcodebuild -project LibreLinkUpHealthKit.xcodeproj \
-           -scheme LibreLinkUpHealthKit \
+xcodebuild -project "CGM Push.xcodeproj" \
+           -scheme CGMPush \
            -configuration Debug \
            build
 ```

@@ -145,7 +145,7 @@ HealthKit integration:
 Credential persistence using the Security framework:
 - Stores email, password, and region as separate generic password items
 - Uses `SecItemAdd`, `SecItemCopyMatching`, `SecItemDelete`
-- Scoped to the service identifier `com.librelinkup-healthkit`
+- Scoped to the service identifier `com.cgmpush`
 - Delete-before-write pattern to handle updates
 - `KeychainError.saveFailed` with `OSStatus` for error reporting
 
@@ -167,7 +167,7 @@ Asset catalog containing the app icon:
 ### Configuration Files
 
 - **Info.plist** — contains `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription` for HealthKit permission prompts
-- **LibreLinkUpHealthKit.entitlements** — contains `com.apple.developer.healthkit` and `com.apple.developer.healthkit.access` entitlements
+- **CGMPush.entitlements** — contains `com.apple.developer.healthkit` and `com.apple.developer.healthkit.access` entitlements
 - **project.yml** — XcodeGen project definition targeting macOS 14.0, Swift 5.9, with `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`
 
 ## State Management
