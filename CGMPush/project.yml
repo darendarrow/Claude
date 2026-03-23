@@ -1,0 +1,24 @@
+name: CGM Push
+options:
+  bundleIdPrefix: com.darrow
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+targets:
+  CGMPush:
+    type: application
+    platform: macOS
+    sources:
+      - CGMPush
+    settings:
+      base:
+        INFOPLIST_FILE: CGMPush/Info.plist
+        CODE_SIGN_ENTITLEMENTS: CGMPush/CGMPush.entitlements
+        PRODUCT_BUNDLE_IDENTIFIER: com.darrow.CGMPush
+        PRODUCT_NAME: CGM Push
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    entitlements:
+      path: CGMPush/CGMPush.entitlements
