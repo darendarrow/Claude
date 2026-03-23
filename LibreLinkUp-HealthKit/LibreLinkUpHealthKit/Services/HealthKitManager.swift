@@ -13,16 +13,22 @@ final class HealthKitManager {
     }
 
     func requestAuthorization() async throws {
-        guard isAvailable else { return }
+        guard isAvailable else {
+            print("[HealthKit] Health data is not available on this device.")
+            throw HealthKitManagerError.notAvailable
+        }
 
         let typesToShare: Set<HKSampleType> = [glucoseType]
         let typesToRead: Set<HKObjectType> = [glucoseType]
 
         try await store.requestAuthorization(toShare: typesToShare, read: typesToRead)
+        print("[HealthKit] Authorization requested.")
     }
 
     func writeGlucoseReadings(_ readings: [GlucoseReading]) async throws -> Int {
-        guard isAvailable else { return 0 }
+        guard isAvailable else {
+            throw HealthKitManagerError.notAvailable
+        }
 
         let existingDates = try await fetchExistingGlucoseDates()
 
@@ -49,7 +55,9 @@ final class HealthKitManager {
             )
         }
 
+        print("[HealthKit] Writing \(samples.count) new glucose samples...")
         try await store.save(samples)
+        print("[HealthKit] Successfully wrote \(samples.count) samples.")
         return samples.count
     }
 
@@ -76,6 +84,17 @@ final class HealthKitManager {
                 continuation.resume(returning: dates)
             }
             store.execute(query)
+        }
+    }
+}
+
+enum HealthKitManagerError: LocalizedError {
+    case notAvailable
+
+    var errorDescription: String? {
+        switch self {
+        case .notAvailable:
+            return "HealthKit is not available on this device."
         }
     }
 }

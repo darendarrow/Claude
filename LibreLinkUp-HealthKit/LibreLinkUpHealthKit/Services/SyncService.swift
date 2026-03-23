@@ -9,6 +9,7 @@ final class SyncService: ObservableObject {
     @Published var readings: [GlucoseReading] = []
     @Published var lastSyncDate: Date?
     @Published var errorMessage: String?
+    @Published var syncResultMessage: String?
     @Published var hasSavedCredentials = false
 
     private var client: LibreLinkUpClient
@@ -79,6 +80,7 @@ final class SyncService: ObservableObject {
 
         isSyncing = true
         errorMessage = nil
+        syncResultMessage = nil
 
         do {
             let fetched = try await client.getGraphData(patientId: patientId)
@@ -89,7 +91,9 @@ final class SyncService: ObservableObject {
             lastSyncDate = Date()
 
             if written > 0 {
-                errorMessage = nil
+                syncResultMessage = "Wrote \(written) reading\(written == 1 ? "" : "s") to HealthKit."
+            } else {
+                syncResultMessage = "Fetched \(fetched.count) reading\(fetched.count == 1 ? "" : "s"). HealthKit already up to date."
             }
         } catch {
             errorMessage = "Sync failed: \(error.localizedDescription)"
