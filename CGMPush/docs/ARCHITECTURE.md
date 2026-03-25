@@ -2,7 +2,7 @@
 
 ## Overview
 
-CGM Push is a SwiftUI macOS application following a service-oriented architecture. The app has three layers: views, a sync orchestrator, and service modules.
+CGM Push is a SwiftUI iOS application following a service-oriented architecture. The app has three layers: views, a sync orchestrator, and service modules.
 
 ```
 ┌─────────────────────────────────────────┐
@@ -32,7 +32,7 @@ CGM Push is a SwiftUI macOS application following a service-oriented architectur
 4. If the API responds with a redirect, the client switches to the correct regional endpoint and retries
 5. On success, the client extracts the auth token and computes the `account-id` header (SHA-256 hash of the user ID via CryptoKit)
 6. `SyncService` fetches the connections list to get the `patientId`
-7. `KeychainManager` saves email, password, and region to the macOS Keychain
+7. `KeychainManager` saves email, password, and region to the iOS Keychain
 8. `SyncService` updates published state, which the UI observes
 
 ### Auto-Login (App Launch)
@@ -168,7 +168,7 @@ Asset catalog containing the app icon:
 
 - **Info.plist** — contains `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription` for HealthKit permission prompts
 - **CGMPush.entitlements** — contains `com.apple.developer.healthkit` and `com.apple.developer.healthkit.access` entitlements
-- **project.yml** — XcodeGen project definition targeting macOS 14.0, Swift 5.9, with `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`
+- **project.yml** — XcodeGen project definition targeting iOS 17.0, Swift 5.9, with `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`
 
 ## State Management
 

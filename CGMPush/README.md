@@ -1,14 +1,14 @@
 # CGM Push
 
-A macOS application that syncs continuous glucose monitor (CGM) readings from Abbott's [LibreLinkUp](https://www.librelinkup.com/) sharing platform into Apple HealthKit.
+An iOS application that syncs continuous glucose monitor (CGM) readings from Abbott's [LibreLinkUp](https://www.librelinkup.com/) sharing platform into Apple HealthKit.
 
 ## What It Does
 
-If you use a FreeStyle Libre CGM and share your glucose data through LibreLinkUp, this app pulls those readings and writes them as blood glucose samples in HealthKit. This makes your CGM data available to the Health app and any other HealthKit-integrated applications on your Mac.
+If you use a FreeStyle Libre CGM and share your glucose data through LibreLinkUp, this app pulls those readings and writes them as blood glucose samples in HealthKit. This makes your CGM data available to the Health app and any other HealthKit-integrated applications on your iPhone.
 
 ## Requirements
 
-- macOS 14.0 or later (Apple Silicon required for HealthKit support)
+- iOS 17.0 or later (iPhone)
 - Xcode 15 or later
 - An Apple Developer account (free personal team is sufficient) for code signing
 - A LibreLinkUp account with at least one active connection (someone sharing their Libre data with you, or your own data shared to yourself)
@@ -23,7 +23,7 @@ If you use a FreeStyle Libre CGM and share your glucose data through LibreLinkUp
 6. Open **Settings** (gear icon), enter your LibreLinkUp credentials, select your region, and tap **Log In**
 7. Press **Sync Now** to fetch readings and write them to HealthKit
 
-Credentials are saved to the macOS Keychain on successful login, so you won't need to re-enter them on subsequent launches. The app will automatically log in from saved credentials when relaunched.
+Credentials are saved to the iOS Keychain on successful login, so you won't need to re-enter them on subsequent launches. The app will automatically log in from saved credentials when relaunched.
 
 See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
 
@@ -49,7 +49,7 @@ CGMPush/
     LibreLinkUpModels.swift       # API response Codable types
   Services/
     HealthKitManager.swift        # HealthKit read/write operations
-    KeychainManager.swift         # Credential storage via macOS Keychain
+    KeychainManager.swift         # Credential storage via iOS Keychain
     LibreLinkUpClient.swift       # LibreLinkUp API client
     SyncService.swift             # Orchestrates API fetch + HealthKit write
   Views/

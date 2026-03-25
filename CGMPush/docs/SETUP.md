@@ -4,9 +4,8 @@
 
 ### Software
 
-- **macOS 14.0 (Sonoma)** or later
+- **iOS 17.0** or later (iPhone)
 - **Xcode 15** or later (Swift 5.9+)
-- **Apple Silicon Mac** — HealthKit requires Apple Silicon. On Intel Macs, the app will fetch and display glucose readings but cannot write to HealthKit.
 
 ### Accounts
 
@@ -58,9 +57,9 @@ The entitlements file should contain:
 
 ### 4. Build and Run
 
-Press **Cmd+R** or select **Product > Run**.
+Press **Cmd+R** or select **Product > Run** to build and install on your connected iPhone.
 
-On first launch, macOS will prompt you to grant HealthKit permissions. Allow read and write access to **Blood Glucose** for the app to function correctly.
+On first launch, iOS will prompt you to grant HealthKit permissions. Allow read and write access to **Blood Glucose** for the app to function correctly.
 
 ### Alternative: Configure via project.yml
 
@@ -84,17 +83,15 @@ xcodegen generate
 
 When the app launches for the first time, it requests HealthKit authorization. A system dialog will appear asking permission to read and write blood glucose data. Grant both.
 
-If HealthKit is not available on your Mac, the app will display an error: "HealthKit is not available on this device." The app can still fetch and display LibreLinkUp readings, but cannot write them to HealthKit.
-
 ### 2. Log In
 
-1. Click the **gear icon** in the toolbar to open Settings
+1. Tap the **gear icon** in the toolbar to open Settings
 2. Enter your LibreLinkUp **email** and **password**
-3. Select your **region** from the dropdown (this must match the region your LibreLinkUp account is registered in)
-4. Click **Log In**
+3. Select your **region** from the picker (this must match the region your LibreLinkUp account is registered in)
+4. Tap **Log In**
 
 On successful login:
-- Your credentials are saved to the macOS Keychain
+- Your credentials are saved to the iOS Keychain
 - The Settings sheet dismisses automatically
 - The status indicator turns green ("Connected")
 
@@ -102,7 +99,7 @@ On subsequent launches, the app will automatically log in using saved Keychain c
 
 ### 3. Sync
 
-After logging in, click **Sync Now** on the main screen. The app will:
+After logging in, tap **Sync Now** on the main screen. The app will:
 
 1. Fetch glucose graph data from the LibreLinkUp API for your first connected patient
 2. Display the readings in the app with the latest value shown prominently
@@ -113,7 +110,7 @@ After logging in, click **Sync Now** on the main screen. The app will:
 
 ### 4. View History
 
-Click **Reading History** to see all fetched readings sorted by time, with color-coded range indicators:
+Tap **Reading History** to see all fetched readings sorted by time, with color-coded range indicators:
 
 - **Red** = Low (below 70 mg/dL)
 - **Green** = In range (70-180 mg/dL)
@@ -121,7 +118,7 @@ Click **Reading History** to see all fetched readings sorted by time, with color
 
 ## Logging Out
 
-Open Settings and click **Log Out** at the bottom of the form. This will:
+Open Settings and tap **Log Out** at the bottom of the form. This will:
 
 - Delete saved credentials from the Keychain
 - Clear all in-memory session data (readings, connection state)
@@ -132,10 +129,6 @@ Open Settings and click **Log Out** at the bottom of the form. This will:
 ### Build fails with "requires a provisioning profile"
 
 A development team must be selected in Signing & Capabilities. See step 2 above.
-
-### "HealthKit is not available on this device"
-
-HealthKit requires Apple Silicon. Intel Macs do not support HealthKit. The app will still show glucose readings fetched from LibreLinkUp but cannot write to HealthKit.
 
 ### "Login failed" error
 
@@ -150,7 +143,7 @@ HealthKit requires Apple Silicon. Intel Macs do not support HealthKit. The app w
 
 ### HealthKit not writing data
 
-- Open **System Settings > Privacy & Security > Health** and confirm the app has write access to Blood Glucose
+- Open **Settings > Privacy & Security > Health** on your iPhone and confirm the app has write access to Blood Glucose
 - After syncing, check the result message below the Sync button — it will indicate whether samples were written or if HealthKit was already up to date
 - Check the Xcode console for `[HealthKit]` log messages that indicate the exact operation being performed
 
