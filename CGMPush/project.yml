@@ -2,15 +2,15 @@ name: CGM Push
 options:
   bundleIdPrefix: com.darrow
   deploymentTarget:
-    macOS: "14.0"
+    iOS: "17.0"
 settings:
   base:
     SWIFT_VERSION: "5.9"
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: "E2TQ3J9XBJ"
 targets:
   CGMPush:
     type: application
-    platform: macOS
+    platform: iOS
     sources:
       - CGMPush
     settings:
@@ -22,3 +22,6 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     entitlements:
       path: CGMPush/CGMPush.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
