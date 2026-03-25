@@ -28,6 +28,8 @@ struct SettingsView: View {
                 Section("LibreLinkUp Account") {
                     TextField("Email", text: $email)
                         .textContentType(.emailAddress)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
 
                     SecureField("Password", text: $password)
@@ -92,6 +94,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

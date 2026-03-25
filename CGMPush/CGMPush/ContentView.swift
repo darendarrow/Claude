@@ -6,29 +6,44 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                statusCard
+            VStack(spacing: 0) {
+                Spacer()
+
                 lastReadingCard
+                    .padding(.bottom, 24)
+
                 syncButton
 
                 if let result = syncService.syncResultMessage {
                     Text(result)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
                 }
                 if let error = syncService.errorMessage {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
                 }
 
                 Spacer()
+
                 NavigationLink(destination: GlucoseListView()) {
                     Label("Reading History", systemImage: "list.bullet")
                 }
+                .padding(.bottom, 8)
             }
-            .padding()
+            .padding(.horizontal)
+            .safeAreaInset(edge: .top) {
+                statusCard
+                    .padding(.horizontal)
+                    .padding(.top, 4)
+            }
             .navigationTitle("CGM Push")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 Button {
                     showingSettings = true
@@ -36,7 +51,7 @@ struct ContentView: View {
                     Image(systemName: "gear")
                 }
             }
-            .sheet(isPresented: $showingSettings) {
+            .fullScreenCover(isPresented: $showingSettings) {
                 SettingsView()
             }
             .task {
@@ -70,7 +85,7 @@ struct ContentView: View {
         VStack(spacing: 8) {
             if let reading = syncService.latestReading {
                 Text("\(reading.valueMgDl, specifier: "%.0f")")
-                    .font(.system(size: 64, weight: .bold, design: .rounded))
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
                 Text("mg/dL")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -79,7 +94,7 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             } else {
                 Text("--")
-                    .font(.system(size: 64, weight: .bold, design: .rounded))
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
                     .foregroundStyle(.tertiary)
                 Text("No readings yet")
                     .font(.subheadline)
@@ -87,7 +102,7 @@ struct ContentView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
+        .padding(.vertical, 24)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
     }
 
