@@ -108,7 +108,19 @@ After logging in, tap **Sync Now** on the main screen. The app will:
    - "Wrote X readings to HealthKit." — new data was written
    - "Fetched X readings. HealthKit already up to date." — all readings already existed
 
-### 4. View History
+### 4. Enable Auto-Sync (Optional)
+
+1. Tap the **gear icon** to open Settings
+2. Toggle **Auto-Sync** on
+3. Select your preferred interval: **10 min**, **30 min**, or **1 hour**
+
+When enabled, the app will sync automatically:
+- **In the foreground**: A timer loop syncs at the exact configured interval
+- **In the background**: iOS Background App Refresh wakes the app periodically to sync (timing is approximate and managed by iOS)
+
+To ensure background sync works, verify that **Background App Refresh** is enabled for CGM Push in **iOS Settings > General > Background App Refresh**.
+
+### 5. View History
 
 Tap **Reading History** to see all fetched readings sorted by time, with color-coded range indicators:
 
@@ -120,6 +132,7 @@ Tap **Reading History** to see all fetched readings sorted by time, with color-c
 
 Open Settings and tap **Log Out** at the bottom of the form. This will:
 
+- Stop auto-sync if running
 - Delete saved credentials from the Keychain
 - Clear all in-memory session data (readings, connection state)
 - Return the app to the logged-out state
@@ -154,3 +167,10 @@ The app checks for existing HealthKit samples within a 30-second window of each 
 ### Sync succeeds but shows 0 new readings
 
 The de-duplication logic compares against the last 24 hours of existing HealthKit samples. If the same readings were already written (e.g., from a previous sync), they will be skipped. This is expected behavior.
+
+### Auto-sync not running in the background
+
+- Ensure **Background App Refresh** is enabled for CGM Push in **iOS Settings > General > Background App Refresh**
+- iOS controls the exact timing of background refreshes — the configured interval is a minimum, not a guarantee. iOS may delay background tasks based on battery, usage patterns, and system conditions
+- Low Power Mode disables Background App Refresh entirely
+- The app must have been launched at least once and the Auto-Sync toggle must be enabled in Settings

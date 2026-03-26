@@ -22,8 +22,11 @@ If you use a FreeStyle Libre CGM and share your glucose data through LibreLinkUp
 5. Grant HealthKit permissions when prompted
 6. Open **Settings** (gear icon), enter your LibreLinkUp credentials, select your region, and tap **Log In**
 7. Press **Sync Now** to fetch readings and write them to HealthKit
+8. Optionally enable **Auto-Sync** in Settings to sync on a schedule (every 10 min, 30 min, or 1 hour)
 
 Credentials are saved to the iOS Keychain on successful login, so you won't need to re-enter them on subsequent launches. The app will automatically log in from saved credentials when relaunched.
+
+When Auto-Sync is enabled, the app syncs periodically while in the foreground and uses iOS Background App Refresh to continue syncing when the app is in the background.
 
 See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
 
@@ -39,9 +42,9 @@ See [docs/SETUP.md](docs/SETUP.md) for detailed setup instructions.
 
 ```
 CGMPush/
-  App.swift                       # App entry point
+  App.swift                       # App entry point, background task registration
   ContentView.swift               # Main screen (status, current reading, sync)
-  Info.plist                      # HealthKit usage descriptions
+  Info.plist                      # HealthKit descriptions, background modes
   CGMPush.entitlements            # HealthKit entitlement
   Assets.xcassets/                # Asset catalog (app icon)
   Models/
@@ -51,10 +54,10 @@ CGMPush/
     HealthKitManager.swift        # HealthKit read/write operations
     KeychainManager.swift         # Credential storage via iOS Keychain
     LibreLinkUpClient.swift       # LibreLinkUp API client
-    SyncService.swift             # Orchestrates API fetch + HealthKit write
+    SyncService.swift             # Orchestrates sync, auto-sync timer, background refresh
   Views/
     GlucoseListView.swift         # Reading history list
-    SettingsView.swift            # Login form, region picker, logout
+    SettingsView.swift            # Login, region picker, auto-sync settings, logout
 ```
 
 ## Building

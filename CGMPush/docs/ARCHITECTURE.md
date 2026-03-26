@@ -43,7 +43,7 @@ CGM Push is a SwiftUI iOS application following a service-oriented architecture.
 
 ### Sync
 
-1. User clicks "Sync Now"
+1. User taps "Sync Now"
 2. `SyncService.sync()` calls `LibreLinkUpClient.getGraphData(patientId:)`
 3. The client fetches from `/llu/connections/{patientId}/graph` with the `Authorization` and `account-id` headers, and parses the response into `[GlucoseReading]`
 4. `SyncService` updates the published `readings`, `latestReading`
@@ -54,16 +54,35 @@ CGM Push is a SwiftUI iOS application following a service-oriented architecture.
    - Saves the new samples to HealthKit in a single batch
 6. `SyncService` publishes `syncResultMessage` with the write count or an "up to date" message
 
+### Auto-Sync (Foreground)
+
+1. User enables the **Auto-Sync** toggle in Settings
+2. `SyncService.autoSyncEnabled` is set to `true` (persisted via `@AppStorage`)
+3. `startAutoSync()` launches an async `Task` loop
+4. The loop calls `sync()`, then sleeps for the configured interval (10, 30, or 60 minutes)
+5. The loop repeats until the task is cancelled (toggle off, logout, or interval change triggers restart)
+6. Changing the interval cancels the current loop and starts a new one with the updated timing
+
+### Background Refresh
+
+1. When the app moves to the background (`scenePhase == .background`), `scheduleBackgroundRefresh()` submits a `BGAppRefreshTaskRequest` with `earliestBeginDate` set to the configured interval
+2. iOS wakes the app at an appropriate time (at or after the requested date)
+3. The registered `BGAppRefreshTask` handler in `App.swift` creates a fresh `SyncService`, logs in from Keychain, and syncs
+4. After a successful background sync, the next refresh is scheduled automatically
+5. If iOS signals the task is expiring, the in-flight sync is cancelled gracefully
+
+**Note:** iOS controls the exact timing of background refreshes. The configured interval is a minimum, not a guarantee. Background App Refresh must be enabled in iOS Settings for the app.
+
 ### Logout
 
-1. `SyncService.logout()` deletes Keychain credentials via `KeychainManager`
+1. `SyncService.logout()` stops auto-sync and deletes Keychain credentials via `KeychainManager`
 2. All published state is reset to defaults
 
 ## Components
 
 ### App.swift
 
-Entry point. Creates the `SyncService` as a `@StateObject` and injects it into the view hierarchy via `.environmentObject()`.
+Entry point. Creates the `SyncService` as a `@StateObject` and injects it into the view hierarchy via `.environmentObject()`. Registers the `BGAppRefreshTask` handler with `BGTaskScheduler` on init. Observes `scenePhase` to schedule a background refresh when the app enters the background.
 
 ### ContentView.swift
 
@@ -86,6 +105,7 @@ Login form with:
 - Region picker (10 regions: US, EU, EU2, UAE, Asia Pacific, Australia, Canada, Germany, France, Japan)
 - Login/Reconnect button with loading spinner
 - Error display section
+- Auto-Sync section with toggle and interval picker (10 min / 30 min / 1 hour segmented control)
 - Status section showing connection state and Keychain status ("Credentials saved")
 - Last sync time
 - Logout button (destructive, visible when logged in or credentials are saved)
@@ -153,10 +173,13 @@ Credential persistence using the Security framework:
 
 Central orchestrator and `ObservableObject` for SwiftUI:
 - Publishes `isLoggedIn`, `isSyncing`, `latestReading`, `readings`, `lastSyncDate`, `errorMessage`, `syncResultMessage`, `hasSavedCredentials`
-- Persists email and region via `@AppStorage`
+- Persists email, region, `autoSyncEnabled`, and `autoSyncInterval` via `@AppStorage`
 - Coordinates login, auto-login (from Keychain), sync, and logout flows
 - Creates a new `LibreLinkUpClient` with the correct region on each login
 - All methods are `@MainActor` isolated for safe UI updates
+- **Auto-sync**: Manages an async `Task` loop (`autoSyncTask`) that syncs on the configured interval while the app is in the foreground. Started/stopped via `didSet` observers on `@AppStorage` properties
+- **Background refresh**: `scheduleBackgroundRefresh()` submits a `BGAppRefreshTaskRequest` to `BGTaskScheduler` with the configured interval as `earliestBeginDate`
+- Exposes `backgroundTaskIdentifier` as a static constant for use by `App.swift`
 
 ### Assets.xcassets
 
@@ -166,9 +189,9 @@ Asset catalog containing the app icon:
 
 ### Configuration Files
 
-- **Info.plist** — contains `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription` for HealthKit permission prompts
+- **Info.plist** — contains `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription` for HealthKit permission prompts, `UIBackgroundModes` (`fetch`) for background refresh, `BGTaskSchedulerPermittedIdentifiers` for the background task ID, and `UIRequiresFullScreen`
 - **CGMPush.entitlements** — contains `com.apple.developer.healthkit` and `com.apple.developer.healthkit.access` entitlements
-- **project.yml** — XcodeGen project definition targeting iOS 17.0, Swift 5.9, with `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`
+- **project.yml** — XcodeGen project definition targeting iOS 17.0, Swift 5.9, with `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`, HealthKit entitlement properties, and `background-modes` capability (`fetch`)
 
 ## State Management
 
@@ -179,7 +202,7 @@ The app uses SwiftUI's built-in state management:
 | `@StateObject` | `SyncService` lifetime in `App.swift` |
 | `@EnvironmentObject` | Sharing `SyncService` across views |
 | `@Published` | Reactive UI updates from `SyncService` |
-| `@AppStorage` | Persisting email and region in UserDefaults |
+| `@AppStorage` | Persisting email, region, auto-sync enabled, and auto-sync interval in UserDefaults |
 | `@State` | Local view state (form fields, loading flags) |
 | Keychain (Security framework) | Secure credential storage across launches |
 
@@ -194,3 +217,4 @@ The project uses only Apple frameworks — no third-party dependencies:
 | HealthKit | HealthKitManager | Blood glucose read/write |
 | Security | KeychainManager | Credential storage |
 | CryptoKit | LibreLinkUpClient | SHA-256 hash for `account-id` header |
+| BackgroundTasks | App.swift, SyncService | BGTaskScheduler for background refresh |
