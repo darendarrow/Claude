@@ -18,6 +18,14 @@
 	<string>APPL</string>
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.darrow.CGMPush.refresh</string>
+	</array>
 	<key>NSHealthShareUsageDescription</key>
 	<string>This app reads blood glucose data from HealthKit to avoid writing duplicate entries.</string>
 	<key>NSHealthUpdateUsageDescription</key>

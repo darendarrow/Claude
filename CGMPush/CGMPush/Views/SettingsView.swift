@@ -67,6 +67,19 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Auto-Sync") {
+                    Toggle("Auto-Sync", isOn: $syncService.autoSyncEnabled)
+
+                    if syncService.autoSyncEnabled {
+                        Picker("Interval", selection: $syncService.autoSyncInterval) {
+                            Text("10 min").tag(10)
+                            Text("30 min").tag(30)
+                            Text("1 hour").tag(60)
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                }
+
                 Section("Status") {
                     LabeledContent("Connection") {
                         Text(syncService.isLoggedIn ? "Active" : "Inactive")

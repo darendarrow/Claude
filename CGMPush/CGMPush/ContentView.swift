@@ -59,6 +59,7 @@ struct ContentView: View {
                 if !syncService.isLoggedIn && syncService.hasSavedCredentials {
                     await syncService.loginFromKeychain()
                 }
+                syncService.startAutoSync()
             }
         }
     }

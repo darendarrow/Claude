@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import BackgroundTasks
 
 @MainActor
 final class SyncService: ObservableObject {
@@ -15,9 +16,16 @@ final class SyncService: ObservableObject {
     private var client: LibreLinkUpClient
     private let healthKit = HealthKitManager()
     private var patientId: String?
+    private var autoSyncTask: Task<Void, Never>?
 
     @AppStorage("email") var email = ""
     @AppStorage("region") var region = "us"
+    @AppStorage("autoSyncEnabled") var autoSyncEnabled = false {
+        didSet { autoSyncEnabled ? startAutoSync() : stopAutoSync() }
+    }
+    @AppStorage("autoSyncInterval") var autoSyncInterval = 10 {
+        didSet { if autoSyncEnabled { restartAutoSync() } }
+    }
 
     init() {
         self.client = LibreLinkUpClient(region: "us")
@@ -64,6 +72,7 @@ final class SyncService: ObservableObject {
     }
 
     func logout() {
+        stopAutoSync()
         KeychainManager.deleteCredentials()
         hasSavedCredentials = false
         isLoggedIn = false
@@ -73,6 +82,43 @@ final class SyncService: ObservableObject {
         lastSyncDate = nil
         email = ""
         errorMessage = nil
+    }
+
+    static let backgroundTaskIdentifier = "com.darrow.CGMPush.refresh"
+
+    // MARK: - Auto-Sync
+
+    func startAutoSync() {
+        guard autoSyncEnabled, isLoggedIn, autoSyncTask == nil else { return }
+        autoSyncTask = Task {
+            while !Task.isCancelled {
+                if !isSyncing {
+                    await sync()
+                }
+                try? await Task.sleep(for: .seconds(autoSyncInterval * 60))
+            }
+        }
+    }
+
+    func stopAutoSync() {
+        autoSyncTask?.cancel()
+        autoSyncTask = nil
+    }
+
+    private func restartAutoSync() {
+        stopAutoSync()
+        startAutoSync()
+    }
+
+    func scheduleBackgroundRefresh() {
+        guard autoSyncEnabled else { return }
+        let request = BGAppRefreshTaskRequest(identifier: Self.backgroundTaskIdentifier)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: TimeInterval(autoSyncInterval * 60))
+        do {
+            try BGTaskScheduler.shared.submit(request)
+        } catch {
+            print("[BackgroundSync] Failed to schedule: \(error.localizedDescription)")
+        }
     }
 
     func sync() async {
